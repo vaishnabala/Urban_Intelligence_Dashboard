@@ -1,0 +1,384 @@
+"""
+Create the data exploration Jupyter notebook properly as JSON.
+"""
+
+import json
+from pathlib import Path
+
+notebook = {
+    "cells": [
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "# 📊 Urban Intelligence Dashboard — Data Exploration\n",
+                "\n",
+                "This notebook explores the real-time data collected from:\n",
+                "- **TomTom** — Traffic flow data (8 monitoring points)\n",
+                "- **OpenWeatherMap** — Weather and Air Quality data\n",
+                "\n",
+                "Study Area: **Sarjapur-Dommasandra-Varthur Belt, Bengaluru**"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "metadata": {},
+            "source": [
+                "import sys\n",
+                "from pathlib import Path\n",
+                "sys.path.insert(0, str(Path.cwd().parent))\n",
+                "\n",
+                "import pandas as pd\n",
+                "import plotly.express as px\n",
+                "import plotly.graph_objects as go\n",
+                "from plotly.subplots import make_subplots\n",
+                "from sqlalchemy import text\n",
+                "from src.database.connection import engine\n",
+                "\n",
+                "print('✅ Imports loaded successfully')"
+            ],
+            "outputs": [],
+            "execution_count": None
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": ["## 1. Load Data from PostGIS"]
+        },
+        {
+            "cell_type": "code",
+            "metadata": {},
+            "source": [
+                "# Load traffic data\n",
+                "traffic_df = pd.read_sql(\n",
+                "    'SELECT * FROM traffic_readings ORDER BY timestamp',\n",
+                "    engine\n",
+                ")\n",
+                "traffic_df['timestamp'] = pd.to_datetime(traffic_df['timestamp'])\n",
+                "\n",
+                "# Load weather data\n",
+                "weather_df = pd.read_sql(\n",
+                "    'SELECT * FROM weather_readings ORDER BY timestamp',\n",
+                "    engine\n",
+                ")\n",
+                "weather_df['timestamp'] = pd.to_datetime(weather_df['timestamp'])\n",
+                "\n",
+                "# Load air quality data\n",
+                "aqi_df = pd.read_sql(\n",
+                "    'SELECT * FROM air_quality_readings ORDER BY timestamp',\n",
+                "    engine\n",
+                ")\n",
+                "aqi_df['timestamp'] = pd.to_datetime(aqi_df['timestamp'])\n",
+                "\n",
+                "print(f'📊 Data loaded:')\n",
+                "print(f'   Traffic:     {len(traffic_df):,} rows')\n",
+                "print(f'   Weather:     {len(weather_df):,} rows')\n",
+                "print(f'   Air Quality: {len(aqi_df):,} rows')"
+            ],
+            "outputs": [],
+            "execution_count": None
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": ["## 2. Traffic Data Overview"]
+        },
+        {
+            "cell_type": "code",
+            "metadata": {},
+            "source": [
+                "# Basic stats per location\n",
+                "traffic_stats = traffic_df.groupby('location_name').agg(\n",
+                "    readings=('id', 'count'),\n",
+                "    avg_speed=('current_speed', 'mean'),\n",
+                "    min_speed=('current_speed', 'min'),\n",
+                "    max_speed=('current_speed', 'max'),\n",
+                "    avg_free_flow=('free_flow_speed', 'mean'),\n",
+                "    avg_congestion=('congestion_ratio', 'mean'),\n",
+                ").round(1)\n",
+                "\n",
+                "traffic_stats['speed_pct'] = (\n",
+                "    (traffic_stats['avg_speed'] / traffic_stats['avg_free_flow']) * 100\n",
+                ").round(1)\n",
+                "\n",
+                "traffic_stats"
+            ],
+            "outputs": [],
+            "execution_count": None
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": ["## 3. Traffic Speed Over Time (All Locations)"]
+        },
+        {
+            "cell_type": "code",
+            "metadata": {},
+            "source": [
+                "# Clean location names for display\n",
+                "traffic_df['location_display'] = (\n",
+                "    traffic_df['location_name']\n",
+                "    .str.replace('_', ' ')\n",
+                "    .str.title()\n",
+                ")\n",
+                "\n",
+                "fig = px.line(\n",
+                "    traffic_df,\n",
+                "    x='timestamp',\n",
+                "    y='current_speed',\n",
+                "    color='location_display',\n",
+                "    title='🚗 Traffic Speed Over Time — All Monitoring Points',\n",
+                "    labels={\n",
+                "        'timestamp': 'Time',\n",
+                "        'current_speed': 'Current Speed (km/h)',\n",
+                "        'location_display': 'Location',\n",
+                "    },\n",
+                ")\n",
+                "fig.update_layout(\n",
+                "    height=500,\n",
+                "    legend=dict(orientation='h', yanchor='bottom', y=-0.4),\n",
+                "    hovermode='x unified',\n",
+                ")\n",
+                "fig.show()"
+            ],
+            "outputs": [],
+            "execution_count": None
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": ["## 4. Congestion Ratio Over Time"]
+        },
+        {
+            "cell_type": "code",
+            "metadata": {},
+            "source": [
+                "fig = px.line(\n",
+                "    traffic_df,\n",
+                "    x='timestamp',\n",
+                "    y='congestion_ratio',\n",
+                "    color='location_display',\n",
+                "    title='🚦 Congestion Ratio Over Time (higher = more congested)',\n",
+                "    labels={\n",
+                "        'timestamp': 'Time',\n",
+                "        'congestion_ratio': 'Congestion Ratio (free_flow / current)',\n",
+                "        'location_display': 'Location',\n",
+                "    },\n",
+                ")\n",
+                "fig.add_hline(y=1.0, line_dash='dash', line_color='green', annotation_text='Free flow')\n",
+                "fig.add_hline(y=1.3, line_dash='dash', line_color='orange', annotation_text='Moderate')\n",
+                "fig.add_hline(y=2.0, line_dash='dash', line_color='red', annotation_text='Heavy')\n",
+                "fig.update_layout(\n",
+                "    height=500,\n",
+                "    legend=dict(orientation='h', yanchor='bottom', y=-0.4),\n",
+                "    hovermode='x unified',\n",
+                ")\n",
+                "fig.show()"
+            ],
+            "outputs": [],
+            "execution_count": None
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": ["## 5. Average Congestion by Location"]
+        },
+        {
+            "cell_type": "code",
+            "metadata": {},
+            "source": [
+                "avg_congestion = (\n",
+                "    traffic_df.groupby('location_display')['congestion_ratio']\n",
+                "    .mean()\n",
+                "    .sort_values(ascending=True)\n",
+                "    .reset_index()\n",
+                ")\n",
+                "\n",
+                "fig = px.bar(\n",
+                "    avg_congestion,\n",
+                "    x='congestion_ratio',\n",
+                "    y='location_display',\n",
+                "    orientation='h',\n",
+                "    title='📊 Average Congestion Ratio by Location',\n",
+                "    labels={\n",
+                "        'congestion_ratio': 'Avg Congestion Ratio',\n",
+                "        'location_display': 'Location',\n",
+                "    },\n",
+                "    color='congestion_ratio',\n",
+                "    color_continuous_scale=['green', 'yellow', 'orange', 'red'],\n",
+                ")\n",
+                "fig.update_layout(height=400)\n",
+                "fig.show()"
+            ],
+            "outputs": [],
+            "execution_count": None
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": ["## 6. Weather — Temperature, Humidity, Wind Over Time"]
+        },
+        {
+            "cell_type": "code",
+            "metadata": {},
+            "source": [
+                "fig = make_subplots(\n",
+                "    rows=3, cols=1,\n",
+                "    subplot_titles=('🌡️ Temperature (°C)', '💧 Humidity (%)', '💨 Wind Speed (m/s)'),\n",
+                "    shared_xaxes=True,\n",
+                "    vertical_spacing=0.08,\n",
+                ")\n",
+                "\n",
+                "fig.add_trace(\n",
+                "    go.Scatter(x=weather_df['timestamp'], y=weather_df['temperature'],\n",
+                "               mode='lines+markers', name='Temperature', line=dict(color='red')),\n",
+                "    row=1, col=1,\n",
+                ")\n",
+                "\n",
+                "fig.add_trace(\n",
+                "    go.Scatter(x=weather_df['timestamp'], y=weather_df['humidity'],\n",
+                "               mode='lines+markers', name='Humidity', line=dict(color='blue')),\n",
+                "    row=2, col=1,\n",
+                ")\n",
+                "\n",
+                "fig.add_trace(\n",
+                "    go.Scatter(x=weather_df['timestamp'], y=weather_df['wind_speed'],\n",
+                "               mode='lines+markers', name='Wind Speed', line=dict(color='green')),\n",
+                "    row=3, col=1,\n",
+                ")\n",
+                "\n",
+                "fig.update_layout(\n",
+                "    height=700,\n",
+                "    title_text='🌤️ Weather Conditions Over Time',\n",
+                "    showlegend=False,\n",
+                ")\n",
+                "fig.show()"
+            ],
+            "outputs": [],
+            "execution_count": None
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": ["## 7. Air Quality Over Time"]
+        },
+        {
+            "cell_type": "code",
+            "metadata": {},
+            "source": [
+                "fig = make_subplots(\n",
+                "    rows=2, cols=1,\n",
+                "    subplot_titles=('📊 AQI Index (1=Good → 5=Very Poor)', 'Pollutant Levels (μg/m³)'),\n",
+                "    shared_xaxes=True,\n",
+                "    vertical_spacing=0.12,\n",
+                ")\n",
+                "\n",
+                "fig.add_trace(\n",
+                "    go.Scatter(\n",
+                "        x=aqi_df['timestamp'], y=aqi_df['aqi'],\n",
+                "        mode='lines+markers', name='AQI',\n",
+                "        line=dict(color='purple', width=2),\n",
+                "        marker=dict(size=8),\n",
+                "    ),\n",
+                "    row=1, col=1,\n",
+                ")\n",
+                "fig.update_yaxes(range=[0, 6], dtick=1, row=1, col=1)\n",
+                "\n",
+                "pollutants = {\n",
+                "    'pm25': ('PM2.5', 'red'),\n",
+                "    'pm10': ('PM10', 'orange'),\n",
+                "    'no2': ('NO₂', 'blue'),\n",
+                "    'o3': ('O₃', 'green'),\n",
+                "}\n",
+                "\n",
+                "for col_name, (label, color) in pollutants.items():\n",
+                "    fig.add_trace(\n",
+                "        go.Scatter(\n",
+                "            x=aqi_df['timestamp'], y=aqi_df[col_name],\n",
+                "            mode='lines+markers', name=label,\n",
+                "            line=dict(color=color),\n",
+                "        ),\n",
+                "        row=2, col=1,\n",
+                "    )\n",
+                "\n",
+                "fig.update_layout(\n",
+                "    height=600,\n",
+                "    title_text='🌬️ Air Quality Over Time',\n",
+                ")\n",
+                "fig.show()"
+            ],
+            "outputs": [],
+            "execution_count": None
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": ["## 8. Data Quality Summary"]
+        },
+        {
+            "cell_type": "code",
+            "metadata": {},
+            "source": [
+                "print('=' * 55)\n",
+                "print('📋 DATA QUALITY SUMMARY')\n",
+                "print('=' * 55)\n",
+                "\n",
+                "print(f'\\n🚗 TRAFFIC:')\n",
+                "print(f'   Rows: {len(traffic_df):,}')\n",
+                "print(f'   Time range: {traffic_df[\"timestamp\"].min()} → {traffic_df[\"timestamp\"].max()}')\n",
+                "print(f'   Speed range: {traffic_df[\"current_speed\"].min():.1f} — {traffic_df[\"current_speed\"].max():.1f} km/h')\n",
+                "print(f'   NULLs in current_speed: {traffic_df[\"current_speed\"].isna().sum()}')\n",
+                "print(f'   Zero speeds: {(traffic_df[\"current_speed\"] == 0).sum()}')\n",
+                "print(f'   Locations tracked: {traffic_df[\"location_name\"].nunique()}')\n",
+                "\n",
+                "print(f'\\n🌤️ WEATHER:')\n",
+                "print(f'   Rows: {len(weather_df):,}')\n",
+                "print(f'   Temp range: {weather_df[\"temperature\"].min():.1f} — {weather_df[\"temperature\"].max():.1f} °C')\n",
+                "print(f'   Humidity range: {weather_df[\"humidity\"].min():.0f} — {weather_df[\"humidity\"].max():.0f} %')\n",
+                "\n",
+                "print(f'\\n🌬️ AIR QUALITY:')\n",
+                "print(f'   Rows: {len(aqi_df):,}')\n",
+                "print(f'   AQI range: {aqi_df[\"aqi\"].min()} — {aqi_df[\"aqi\"].max()}')\n",
+                "print(f'   PM2.5 range: {aqi_df[\"pm25\"].min():.1f} — {aqi_df[\"pm25\"].max():.1f}')\n",
+                "\n",
+                "total_nulls = (\n",
+                "    traffic_df[['current_speed', 'free_flow_speed', 'congestion_ratio']].isna().sum().sum()\n",
+                "    + weather_df[['temperature', 'humidity']].isna().sum().sum()\n",
+                "    + aqi_df[['aqi', 'pm25']].isna().sum().sum()\n",
+                ")\n",
+                "\n",
+                "print(f'\\n{\"=\" * 55}')\n",
+                "if total_nulls == 0:\n",
+                "    print('✅ ALL DATA QUALITY CHECKS PASSED!')\n",
+                "else:\n",
+                "    print(f'⚠️  {total_nulls} NULL values found in critical columns')\n",
+                "print('=' * 55)"
+            ],
+            "outputs": [],
+            "execution_count": None
+        }
+    ],
+    "metadata": {
+        "kernelspec": {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3"
+        },
+        "language_info": {
+            "name": "python",
+            "version": "3.13.0"
+        }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 5
+}
+
+# Save
+out_path = Path(__file__).resolve().parent.parent / "notebooks" / "01_data_exploration.ipynb"
+out_path.parent.mkdir(parents=True, exist_ok=True)
+
+with open(out_path, "w", encoding="utf-8") as f:
+    json.dump(notebook, f, indent=1, ensure_ascii=False)
+
+print(f"✅ Notebook created: {out_path}")
+print(f"   Size: {out_path.stat().st_size / 1024:.1f} KB")
