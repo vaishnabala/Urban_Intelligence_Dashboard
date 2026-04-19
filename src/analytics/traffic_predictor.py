@@ -325,7 +325,7 @@ if __name__ == "__main__":
         
         if not predictions:
             print("  ⚠️  No predictions available. Train the model first!")
-            print(f"  Run: jupyter notebook notebooks/02_model_training.ipynb")
+            print("  Run: jupyter notebook notebooks/02_model_training.ipynb")
             break
         
         level_emojis = {
@@ -348,4 +348,4 @@ if __name__ == "__main__":
         
         print(f"\n  📝 {predictions[0].confidence_note}")
     
-    print(f"\n✅ Predictions complete!")
+    print("\n✅ Predictions complete!")

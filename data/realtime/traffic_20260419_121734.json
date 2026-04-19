@@ -1,0 +1,88 @@
+{
+  "collected_at": "2026-04-19T06:47:34.932346+00:00",
+  "source": "tomtom_traffic_flow",
+  "success_count": 8,
+  "fail_count": 0,
+  "readings": [
+    {
+      "timestamp": "2026-04-19 06:47:25.812784+00:00",
+      "location_name": "sarjapur_road_junction",
+      "lat": 12.91,
+      "lon": 77.687,
+      "current_speed": 32,
+      "free_flow_speed": 36,
+      "confidence": 1,
+      "congestion_ratio": 1.125
+    },
+    {
+      "timestamp": "2026-04-19 06:47:26.992614+00:00",
+      "location_name": "dommasandra_circle",
+      "lat": 12.918,
+      "lon": 77.752,
+      "current_speed": 25,
+      "free_flow_speed": 25,
+      "confidence": 1,
+      "congestion_ratio": 1.0
+    },
+    {
+      "timestamp": "2026-04-19 06:47:28.177577+00:00",
+      "location_name": "chembenahalli",
+      "lat": 12.908,
+      "lon": 77.736,
+      "current_speed": 25,
+      "free_flow_speed": 25,
+      "confidence": 1,
+      "congestion_ratio": 1.0
+    },
+    {
+      "timestamp": "2026-04-19 06:47:29.498456+00:00",
+      "location_name": "varthur_gunjur_junction",
+      "lat": 12.937,
+      "lon": 77.744,
+      "current_speed": 32,
+      "free_flow_speed": 36,
+      "confidence": 1,
+      "congestion_ratio": 1.125
+    },
+    {
+      "timestamp": "2026-04-19 06:47:30.686136+00:00",
+      "location_name": "sarjapur_town_center",
+      "lat": 12.864,
+      "lon": 77.787,
+      "current_speed": 30,
+      "free_flow_speed": 30,
+      "confidence": 1,
+      "congestion_ratio": 1.0
+    },
+    {
+      "timestamp": "2026-04-19 06:47:31.870142+00:00",
+      "location_name": "carmelaram_junction",
+      "lat": 12.906,
+      "lon": 77.706,
+      "current_speed": 24,
+      "free_flow_speed": 25,
+      "confidence": 0.961244,
+      "congestion_ratio": 1.042
+    },
+    {
+      "timestamp": "2026-04-19 06:47:33.236308+00:00",
+      "location_name": "harlur_road_junction",
+      "lat": 12.916,
+      "lon": 77.681,
+      "current_speed": 32,
+      "free_flow_speed": 36,
+      "confidence": 1,
+      "congestion_ratio": 1.125
+    },
+    {
+      "timestamp": "2026-04-19 06:47:34.422784+00:00",
+      "location_name": "iblur_wipro_junction",
+      "lat": 12.925,
+      "lon": 77.678,
+      "current_speed": 26,
+      "free_flow_speed": 26,
+      "confidence": 1,
+      "congestion_ratio": 1.0
+    }
+  ]
+}

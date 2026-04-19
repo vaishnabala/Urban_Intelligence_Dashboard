@@ -48,7 +48,7 @@ def init_database():
     for idx in spatial_indexes:
         print(f"   📌 {idx}")
 
-    print(f"\n🎉 Database setup complete!")
+    print("\n🎉 Database setup complete!")
 
 
 if __name__ == "__main__":

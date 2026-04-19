@@ -162,11 +162,11 @@ def root():
 # ================================================================
 # INCLUDE ROUTERS
 # ================================================================
-from src.api.routes import traffic, weather, analytics
+from src.api.routes import traffic, weather, analytics, geodata
 app.include_router(traffic.router)
 app.include_router(weather.router)
 app.include_router(analytics.router)
-
+app.include_router(geodata.router)
 
 
 # ================================================================
@@ -181,3 +181,4 @@ if __name__ == "__main__":
         reload=True,
         reload_dirs=["src"],
     )
+    

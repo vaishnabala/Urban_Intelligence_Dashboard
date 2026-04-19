@@ -51,3 +51,9 @@ ruff
 
 
 pydantic-settings
+
+streamlit 
+folium 
+streamlit-folium 
+plotly 
+requests

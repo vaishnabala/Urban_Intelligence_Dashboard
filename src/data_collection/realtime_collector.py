@@ -95,7 +95,7 @@ def collect_traffic() -> dict:
             # Higher ratio = more congested (free_flow / current)
             # If current_speed is 0, set a high ratio
             if current_speed > 0:
-                congestion_ratio = round(free_flow_speed / current_speed, 3)
+                congestion_ratio = round(current_speed / free_flow_speed, 3)
             else:
                 congestion_ratio = 10.0  # Max congestion indicator
             

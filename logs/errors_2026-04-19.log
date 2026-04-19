@@ -1,0 +1,2 @@
+2026-04-19 15:06:26.725 | ERROR    | realtime_collector:collect_traffic:139 |     ❌ iblur_wipro_junction: Request timed out
+2026-04-19 15:17:46.032 | ERROR    | realtime_collector:collect_traffic:139 |     ❌ sarjapur_road_junction: Request timed out

@@ -638,7 +638,6 @@ def analyze_all_locations(time_window_hours: int = 3) -> dict:
 # MAIN — Test the analysis
 # ================================================================
 if __name__ == "__main__":
-    import json
     
     print("\n" + "🔍 " * 20)
     print("URBAN INTELLIGENCE — RISK & CONGESTION ANALYSIS")
@@ -650,7 +649,7 @@ if __name__ == "__main__":
     congestion_results = analyze_all_locations(time_window_hours=24)
     
     # 2. Zone risk scores for key areas
-    print(f"\n\nPART 2: Zone Risk Scores")
+    print("\n\nPART 2: Zone Risk Scores")
     print("-" * 50)
     
     test_zones = [
@@ -676,4 +675,4 @@ if __name__ == "__main__":
             for factor in risk.details["weather_risk_factors"]:
                 print(f"      → {factor}")
     
-    print(f"\n\n✅ Analysis complete!")
+    print("\n\n✅ Analysis complete!")

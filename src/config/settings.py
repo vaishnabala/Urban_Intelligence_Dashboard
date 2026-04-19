@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings
-from pydantic import Field
 from typing import Dict, Tuple
 from pathlib import Path
 
@@ -48,14 +47,15 @@ class Settings(BaseSettings):
     # 8 Monitoring Points (lat, lon)
     # ──────────────────────────────────────────────
     MONITORING_POINTS: Dict[str, Tuple[float, float]] = {
-        "sarjapur_road_junction":   (12.9100, 77.6870),
-        "dommasandra_circle":       (12.9180, 77.7520),
-        "chembenahalli":            (12.9080, 77.7360),
-        "varthur_gunjur_junction":  (12.9370, 77.7440),
-        "sarjapur_town_center":     (12.8640, 77.7870),
-        "carmelaram_junction":      (12.9060, 77.7060),
-        "harlur_road_junction":     (12.9160, 77.6810),
-        "iblur_wipro_junction":     (12.9250, 77.6780),
+        "sarjapur_road_junction":   (12.9165, 77.6750),  # Near Iblur/Sarjapur Main Road
+        "dommasandra_circle":       (12.8832, 77.7524),  # Intersection of SH-35 and Sarjapur Road
+        "chembenahalli":            (12.8793, 77.7616),  # Near the main village entrance/bus stop
+        "varthur_gunjur_junction":  (12.9265, 77.7377),  # Specifically at Gunjur Village junction
+        "sarjapur_town_center":     (12.8600, 77.7860),  # Central bus stand/Police station area
+        "carmelaram_junction":      (12.9125, 77.7056),  # Near the railway station/Decathlon intersection
+        "harlur_road_junction":     (12.9080, 77.6760),  # Entry to Harlur Road from Sarjapur Road
+        "iblur_wipro_junction":     (12.9209, 77.6653),  # Major signal at Sarjapur Road-ORR intersection
+
     }
 
     # ──────────────────────────────────────────────

@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from datetime import datetime, timedelta, timezone
-from src.database.connection import get_engine
+from src.database.connection import engine
 from src.analytics.risk_scorer import analyze_all_locations
 from src.analytics.anomaly_detection import get_active_anomalies
 
@@ -22,7 +22,6 @@ router = APIRouter(tags=["Analytics & AQI"])
 @router.get("/api/v1/aqi/latest")
 async def get_latest_aqi():
     """Return the most recent air quality reading."""
-    engine = get_engine()
     query = text("""
         SELECT id, timestamp, aqi, pm25, pm10, no2, o3, co, so2
         FROM air_quality_readings
@@ -51,26 +50,26 @@ async def get_latest_aqi():
 # ──────────────────────────────────────
 # Anomalies
 # ──────────────────────────────────────
-
 @router.get("/api/v1/analytics/anomalies")
 async def get_anomalies():
     """Return currently active anomalies."""
     try:
-        anomalies = get_active_anomalies()
+        gdf = get_active_anomalies(hours=24)
         results = []
-        for a in anomalies:
-            results.append({
-                "id": a.get("id"),
-                "timestamp": a.get("timestamp").isoformat() if a.get("timestamp") else None,
-                "anomaly_type": a.get("anomaly_type"),
-                "severity": a.get("severity"),
-                "description": a.get("description"),
-                "location_name": a.get("location_name")
-            })
+        if len(gdf) > 0:
+            for _, row in gdf.iterrows():
+                ts = row.get("timestamp")
+                results.append({
+                    "id": int(row.get("id")) if row.get("id") is not None else None,
+                    "timestamp": ts.isoformat() if hasattr(ts, "isoformat") else str(ts),
+                    "anomaly_type": row.get("anomaly_type"),
+                    "severity": row.get("severity"),
+                    "description": row.get("description"),
+                    "location_name": row.get("location_name")
+                })
         return {"count": len(results), "anomalies": results}
     except Exception as e:
         return {"count": 0, "anomalies": [], "note": str(e)}
-
 
 # ──────────────────────────────────────
 # Risk Scores
@@ -88,57 +87,54 @@ async def get_risk_scores():
 
 # ──────────────────────────────────────
 # Dashboard Summary
+# ──────────────<span class="ml-2" /><span class="inline-block w-3 h-3 rounded-full bg-neutral-a12 align-middle mb-[0.1rem]" />
+# ──────────────────────────────────────
+# Dashboard Summary
 # ──────────────────────────────────────
 
 @router.get("/api/v1/analytics/summary")
-async def get_dashboard_summary():
-    """Return overall dashboard summary."""
-    engine = get_engine()
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+async def get_summary():
+    """Return a combined summary for the dashboard."""
+    summary = {}
 
-    with engine.connect() as conn:
-        # Total monitored points
-        traffic_points = conn.execute(text(
-            "SELECT COUNT(DISTINCT location_name) FROM traffic_readings"
-        )).scalar() or 0
+    # Latest AQI
+    try:
+        query = text("SELECT aqi, timestamp FROM air_quality_readings ORDER BY timestamp DESC LIMIT 1")
+        with engine.connect() as conn:
+            row = conn.execute(query).fetchone()
+        summary["aqi"] = {"value": row.aqi, "timestamp": row.timestamp.isoformat()} if row else None
+    except Exception:
+        summary["aqi"] = None
 
-        # Average congestion (last 24h)
-        avg_congestion = conn.execute(text("""
-            SELECT AVG(congestion_ratio) FROM traffic_readings
-            WHERE timestamp >= :cutoff
-        """), {"cutoff": cutoff}).scalar()
+    # Latest weather
+    try:
+        query = text("SELECT temperature, humidity, weather_description, timestamp FROM weather_readings ORDER BY timestamp DESC LIMIT 1")
+        with engine.connect() as conn:
+            row = conn.execute(query).fetchone()
+        summary["weather"] = {
+            "temperature": row.temperature,
+            "humidity": row.humidity,
+            "description": row.weather_description,
+            "timestamp": row.timestamp.isoformat()
+        } if row else None
+    except Exception:
+        summary["weather"] = None
 
-        # Latest weather
-        weather_row = conn.execute(text("""
-            SELECT temperature, humidity, weather_description
-            FROM weather_readings ORDER BY timestamp DESC LIMIT 1
-        """)).fetchone()
+    # Traffic count
+    try:
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+        query = text("SELECT COUNT(*) as cnt FROM traffic_readings WHERE timestamp >= :cutoff")
+        with engine.connect() as conn:
+            row = conn.execute(query, {"cutoff": cutoff}).fetchone()
+        summary["traffic_readings_last_hour"] = row.cnt if row else 0
+    except Exception:
+        summary["traffic_readings_last_hour"] = 0
 
-        # Latest AQI
-        aqi_val = conn.execute(text("""
-            SELECT aqi FROM air_quality_readings
-            ORDER BY timestamp DESC LIMIT 1
-        """)).scalar()
+    # Active anomalies count
+    try:
+        anomalies = get_active_anomalies()
+        summary["active_anomalies"] = len(anomalies)
+    except Exception:
+        summary["active_anomalies"] = 0
 
-        # Active anomalies count
-        anomaly_count = conn.execute(text("""
-            SELECT COUNT(*) FROM anomalies
-            WHERE timestamp >= :cutoff
-        """), {"cutoff": cutoff}).scalar() or 0
-
-    weather_summary = None
-    if weather_row:
-        weather_summary = {
-            "temperature": weather_row.temperature,
-            "humidity": weather_row.humidity,
-            "description": weather_row.weather_description
-        }
-
-    return {
-        "monitored_locations": traffic_points,
-        "active_anomalies_24h": anomaly_count,
-        "avg_congestion_24h": round(avg_congestion, 4) if avg_congestion else None,
-        "latest_aqi": aqi_val,
-        "weather": weather_summary,
-        "generated_at": datetime.now(timezone.utc).isoformat()
-    }
+    return summary

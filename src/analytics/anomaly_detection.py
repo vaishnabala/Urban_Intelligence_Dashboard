@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from datetime import datetime, timezone, timedelta
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
@@ -105,7 +105,7 @@ def detect_traffic_anomalies(
         List of detected Anomaly objects
     """
     logger.info(f"{'='*55}")
-    logger.info(f"DETECTING TRAFFIC ANOMALIES")
+    logger.info("DETECTING TRAFFIC ANOMALIES")
     logger.info(f"  Lookback: {lookback_hours}h | Z-threshold: {z_threshold}")
     logger.info(f"{'='*55}")
     
@@ -315,7 +315,7 @@ def detect_aqi_anomalies(
         List of detected Anomaly objects
     """
     logger.info(f"\n{'='*55}")
-    logger.info(f"DETECTING AIR QUALITY ANOMALIES")
+    logger.info("DETECTING AIR QUALITY ANOMALIES")
     logger.info(f"  Lookback: {lookback_hours}h | PM2.5 threshold: {pm25_threshold} μg/m³")
     logger.info(f"{'='*55}")
     
@@ -592,12 +592,12 @@ def run_full_anomaly_scan(
     
     # ---- Print summary ----
     print(f"\n{'='*65}")
-    print(f"📋 ANOMALY SCAN SUMMARY")
+    print("📋 ANOMALY SCAN SUMMARY")
     print(f"{'='*65}")
     print(f"  Lookback window:    {lookback_hours} hours")
     print(f"  Z-score threshold:  {z_threshold}")
     print(f"  PM2.5 threshold:    {pm25_threshold} μg/m³")
-    print(f"")
+    print("")
     print(f"  Traffic anomalies:  {len(traffic_anomalies)}")
     print(f"  AQI anomalies:      {len(aqi_anomalies)}")
     print(f"  Total detected:     {len(all_anomalies)}")
@@ -605,7 +605,7 @@ def run_full_anomaly_scan(
     
     # Breakdown by severity
     if all_anomalies:
-        print(f"\n  By Severity:")
+        print("\n  By Severity:")
         severity_counts = {}
         for a in all_anomalies:
             severity_counts[a.severity] = severity_counts.get(a.severity, 0) + 1
@@ -615,14 +615,14 @@ def run_full_anomaly_scan(
             if sev in severity_counts:
                 print(f"    {severity_emojis.get(sev, '⚪')} {sev:<10s}: {severity_counts[sev]}")
         
-        print(f"\n  By Type:")
+        print("\n  By Type:")
         type_counts = {}
         for a in all_anomalies:
             type_counts[a.anomaly_type] = type_counts.get(a.anomaly_type, 0) + 1
         for atype, count in sorted(type_counts.items()):
             print(f"    • {atype:<25s}: {count}")
         
-        print(f"\n  Details:")
+        print("\n  Details:")
         for i, a in enumerate(all_anomalies, 1):
             loc = (a.location_name or "unknown").replace("_", " ").title()
             sev_emoji = severity_emojis.get(a.severity, "⚪")
@@ -631,7 +631,7 @@ def run_full_anomaly_scan(
             print(f"       {a.description[:100]}{'...' if len(a.description) > 100 else ''}")
             print()
     else:
-        print(f"\n  ✅ No anomalies detected — all readings within normal range")
+        print("\n  ✅ No anomalies detected — all readings within normal range")
     
     print(f"{'='*65}")
     

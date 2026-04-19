@@ -5,7 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from src.config.settings import settings
 
 
@@ -73,7 +73,7 @@ def test_connection():
         with engine.connect() as conn:
             result = conn.execute(text("SELECT version();"))
             version = result.fetchone()[0]
-            print(f"\n✅ PostgreSQL connected!")
+            print("\n✅ PostgreSQL connected!")
             print(f"📊 Version: {version[:60]}...")
 
             # Check PostGIS
@@ -85,7 +85,7 @@ def test_connection():
             if postgis_exists:
                 result = conn.execute(text("SELECT PostGIS_version();"))
                 postgis_version = result.fetchone()[0]
-                print(f"✅ PostGIS enabled!")
+                print("✅ PostGIS enabled!")
                 print(f"📍 PostGIS Version: {postgis_version}")
             else:
                 print("⚠️  PostGIS not found. Installing...")
@@ -97,15 +97,15 @@ def test_connection():
         db = SessionLocal()
         db.execute(text("SELECT 1"))
         db.close()
-        print(f"✅ Session factory working!")
+        print("✅ Session factory working!")
 
         # Test get_db()
         db = next(get_db())
         db.execute(text("SELECT 1"))
         db.close()
-        print(f"✅ get_db() working!")
+        print("✅ get_db() working!")
 
-        print(f"\n🎉 All database connections verified!")
+        print("\n🎉 All database connections verified!")
         return True
 
     except Exception as e:

@@ -8,7 +8,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
 from datetime import datetime, timezone, timedelta
-from typing import Optional
 
 from fastapi import APIRouter, Query, HTTPException
 from sqlalchemy import text
@@ -91,7 +90,6 @@ def get_traffic_history(
 ):
     """Get traffic history for a specific location."""
 
-    # Validate location
     valid_locations = list(settings.MONITORING_POINTS.keys())
     if location not in valid_locations:
         raise HTTPException(
@@ -175,7 +173,6 @@ def get_traffic_heatmap():
             congestion_ratio = row[5]
             timestamp = row[6]
 
-            # Congestion score 0-100
             if congestion_ratio <= 1.0:
                 score = 0
             elif congestion_ratio >= 3.0:
@@ -183,7 +180,6 @@ def get_traffic_heatmap():
             else:
                 score = round(((congestion_ratio - 1.0) / 2.0) * 100, 1)
 
-            # Level
             if score <= 15:
                 level = "free_flow"
                 color = "#00cc00"
@@ -217,7 +213,6 @@ def get_traffic_heatmap():
                 "timestamp": str(timestamp),
             })
 
-        # Sort by congestion (worst first)
         points.sort(key=lambda x: x["congestion_score"], reverse=True)
 
         return {
