@@ -1,0 +1,61 @@
+{
+  "collected_at": "2026-04-20T20:17:48.438087+00:00",
+  "source": "openweathermap_current",
+  "raw_response": {
+    "coord": {
+      "lon": 77.725,
+      "lat": 12.905
+    },
+    "weather": [
+      {
+        "id": 800,
+        "main": "Clear",
+        "description": "clear sky",
+        "icon": "01n"
+      }
+    ],
+    "base": "stations",
+    "main": {
+      "temp": 25.87,
+      "feels_like": 26.21,
+      "temp_min": 25.19,
+      "temp_max": 26.57,
+      "pressure": 1010,
+      "humidity": 65,
+      "sea_level": 1010,
+      "grnd_level": 912
+    },
+    "visibility": 6000,
+    "wind": {
+      "speed": 2.06,
+      "deg": 110
+    },
+    "clouds": {
+      "all": 0
+    },
+    "dt": 1776715566,
+    "sys": {
+      "type": 1,
+      "id": 9205,
+      "country": "IN",
+      "sunrise": 1776731596,
+      "sunset": 1776776526
+    },
+    "timezone": 19800,
+    "id": 1277333,
+    "name": "Bengaluru",
+    "cod": 200
+  },
+  "parsed_reading": {
+    "timestamp": "2026-04-20 20:17:48.420960+00:00",
+    "lat": 12.905,
+    "lon": 77.725,
+    "temperature": 25.87,
+    "humidity": 65,
+    "pressure": 1010,
+    "weather_description": "clear sky",
+    "wind_speed": 2.06,
+    "rain_1h": 0,
+    "visibility": 6000
+  }
+}
