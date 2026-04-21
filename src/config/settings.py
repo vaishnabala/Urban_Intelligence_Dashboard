@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     # ──────────────────────────────────────────────
     DATABASE_URL: str
     REDIS_URL: str
+    # ──────────────────────────────────────────────
+    # Supabase (loaded from .env)
+    # ──────────────────────────────────────────────
+    SUPABASE_URL: str
+    SUPABASE_KEY: str
 
     # ──────────────────────────────────────────────
     # Project Paths
